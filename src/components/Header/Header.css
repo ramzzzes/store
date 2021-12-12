@@ -1,0 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@100;500&display=swap');
+
+a{
+    text-decoration: none;
+}
+a.active-category{
+    border-bottom: 2px solid #5ECE7B;
+    padding-bottom: 28px;
+}
