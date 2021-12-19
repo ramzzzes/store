@@ -2,6 +2,7 @@
 
 a{
     text-decoration: none;
+    color: inherit;
 }
 a.active-category{
     border-bottom: 2px solid #5ECE7B;

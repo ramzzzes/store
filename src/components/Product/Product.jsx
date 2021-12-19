@@ -1,6 +1,8 @@
 import {Component} from "react";
 import {ApolloClient, gql, InMemoryCache} from "@apollo/client";
 import styled from "styled-components";
+import {connect} from "react-redux";
+import {addToCart} from "../../actions/cartActions";
 
 const ProductContent = styled.div`
     display: flex;
@@ -37,7 +39,7 @@ const ProductThumb = styled.div`
 
 
 const ProductTitle = styled.div`
-  font-family: Raleway;
+  font-family: Raleway,sans-serif;
   font-style: normal;
   font-weight: 600;
   font-size: 30px;
@@ -49,7 +51,7 @@ const ProductTitle = styled.div`
 
 const ProductBrand = styled.div`
   margin-top:16px;
-  font-family: Raleway;
+  font-family: Raleway,sans-serif;
   font-style: normal;
   font-weight: normal;
   font-size: 30px;
@@ -97,7 +99,7 @@ const ProductPrice = styled.div`
   margin-top:20px;
 `
 
-const ProductSizeBoxContainer = styled.div`
+export const ProductSizeBoxContainer = styled.div`
   display:flex;
 `
 
@@ -117,7 +119,7 @@ const ProductDesc = styled.div`
    margin-top:40px;
 `
 
-const ProductSizeBox = styled.div`
+export const ProductSizeBox = styled.div`
   ${props => props.active && `background: #1D1F22;color:#fff;`}
   border: 1px solid #A6A6A6;
   box-sizing: border-box;
@@ -168,7 +170,8 @@ class Product extends Component {
                               name,
                               description,
                               prices {
-                                amount
+                                amount,
+                                currency
                               },
                               gallery,
                               brand,
@@ -198,6 +201,8 @@ class Product extends Component {
     componentDidMount() {
         this.fetchProductsById(this.props.match.params.product)
     }
+
+
 
     render() {
         return (
@@ -229,7 +234,7 @@ class Product extends Component {
                     </ProductSizeBoxContainer>
                     <ProductPriceLabel>PRICE:</ProductPriceLabel>
                     <ProductPrice>${this.state.product?.prices && this.state.product?.prices[0]['amount']}</ProductPrice>
-                    <AddToCart>ADD TO CART</AddToCart>
+                    <AddToCart onClick={() => this.props.addToCart({...this.state.product,...{size : this.state.activeSize}})}>ADD TO CART</AddToCart>
                     <ProductDesc dangerouslySetInnerHTML={{__html: this.state.product?.description}} />
                 </ProductDetailsContainer>
             </ProductContent>
@@ -237,4 +242,6 @@ class Product extends Component {
     }
 }
 
-export default Product
+
+
+export default connect(null, {addToCart})(Product)

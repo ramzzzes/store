@@ -3,6 +3,7 @@ import Header from "./components/Header/Header";
 import {Route, Switch} from "react-router-dom";
 import ProductList from "./components/Product/ProductList";
 import Product from "./components/Product/Product";
+import Cart from "./components/Cart/Cart";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             </Route>
             <Route exact path="/category/:category" component={ProductList} />
             <Route exact path="/category/:category/product/:product" component={Product} />
+            <Route exact path="/cart" component={Cart} />
         </Switch>
     </div>
   );
