@@ -97,7 +97,7 @@ class ProductList extends Component {
         return client.query({
             query: gql `
                    query Category {
-                        category(input : {title: "${id}"} ) {
+                        category(input : {title: "${id ? id : 'all'}"} ) {
                              name,
                               products {
                               id,

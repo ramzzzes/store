@@ -15,5 +15,5 @@ export const calculatePriceSum = (cart,currencies) => {
         sum += priceObject?.amount * product.quantity
     })
 
-    return sum
+    return sum.toFixed(2)
 };
