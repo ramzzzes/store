@@ -12,6 +12,9 @@ import Basket from "./assets/Basket";
 import ArrowUp from "./assets/ArrowUp";
 import {Link, NavLink} from "react-router-dom";
 import { connect } from "react-redux";
+import {setActiveCurrency} from "../../actions/currencyActions";
+import {calculatePrice, calculatePriceSum} from "../../helpers/price";
+import {addToCart, removeFromCart} from "../../actions/cartActions";
 
 
 const HeaderContainer = styled.div`
@@ -61,6 +64,10 @@ const HeaderRightSide = styled.div`
   justify-content: flex-end;
 `
 
+const CurrencySwitcherContainer = styled.div`
+  display: flex;
+`
+
 const CurrencySwitcher = styled.div`
   font-family: 'Raleway',serif;
   font-style: normal;
@@ -93,12 +100,14 @@ const CurrencyDropdown = styled.div`
   left:-32px;
   box-shadow: 0 4px 35px rgba(168, 172, 176, 0.19);
   width:94px;
-  height:129px;
+  height:auto;
+  background: #fff;
   top:36px;
   padding:20px;
 `
 
 const CartDropdown = styled.div`
+  z-index: 10;
   position: absolute;
   left:-300%;
   box-shadow: 0 4px 35px rgba(168, 172, 176,0.19);
@@ -116,6 +125,108 @@ const CartTitle = styled.div`
   font-size: 16px;
   line-height: 160%;
   text-align: left;
+  color: #1D1F22;
+`
+
+const CartContent = styled.div`
+    padding:23px 0 70px 0;
+`
+
+const CartTotalContainer = styled.div`
+    display: flex;
+    font-family: Raleway,sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 160%;
+    align-items: center;
+`
+
+const CartTotalLabel = styled.div`
+    width:50%;
+`
+
+const CartTotalValue = styled.div`
+    width:50%;
+  text-align: right;
+`
+
+const CartItem = styled.div`
+    display: flex;
+  margin-bottom: 40px;
+`
+
+const CartInfo = styled.div`
+    width:50%;
+`
+
+const CartActions = styled.div`
+    width:24px;
+  height:137px;
+`
+
+const CartIncrement = styled.div`
+    width:24px;
+    height:24px;
+    border: 1px solid #1D1F22;
+    box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+`
+
+const CartCount = styled.div`
+    height:86px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`
+
+const CartDecrement = styled.div`
+    width:24px;
+    height:24px;
+    border: 1px solid #1D1F22;
+    box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+
+`
+
+const CartSidebar = styled.div`
+    width:40%;
+`
+
+
+const CartImg = styled.div`
+    width:100%;
+    height:137px;
+    ${props => props.src && `background: url(${props.src}) center center no-repeat;`}
+    background-size: contain;
+    margin-left:12px;
+`
+
+
+const CartItemTitle = styled.div`
+  font-family: Raleway,sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 160%;
+  display: flex;
+  align-items: center;
+  color: #1D1F22;
+`
+
+const CartItemPrice = styled.div`
+  font-family: Raleway,sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 16px;
+  padding-top:10px;
+  line-height: 160%;
   color: #1D1F22;
 `
 
@@ -199,8 +310,6 @@ class Header extends Component {
 
     constructor(props) {
         super(props);
-        this.setWrapperRef = this.setWrapperRef.bind(this);
-        this.handleClickOutside = this.handleClickOutside.bind(this);
         this.state = {
             menu: [],
             currencyVisible : false,
@@ -208,23 +317,8 @@ class Header extends Component {
         };
     }
 
-    setWrapperRef(node) {
-        this.wrapperRef = node;
-    }
-
-
-    handleClickOutside(event) {
-        if (this.wrapperRef && !this.wrapperRef.contains(event.target)) {
-            this.setState({
-                cartVisible : false,
-                currencyVisible : false,
-            })
-        }
-    }
 
     componentDidMount() {
-        document.addEventListener('mousedown', this.handleClickOutside);
-
         const client = new ApolloClient({
             uri: 'http://localhost:4000',
             cache: new InMemoryCache()
@@ -255,14 +349,12 @@ class Header extends Component {
         return (
             <HeaderContainer>
                 <HeaderItem>
-                    {this.state.menu.map(menu => (
-
-                            <NavLink to={"/category/" + menu.name} activeClassName="active-category">
+                    {this.state.menu.map((menu,index) => (
+                            <NavLink key={index} to={"/category/" + menu.name} activeClassName="active-category">
                                 <MenuItem key={menu.name}>
                                     <MenuText>{menu.name}</MenuText>
                                 </MenuItem>
                             </NavLink>
-
                     ))}
                 </HeaderItem>
 
@@ -274,51 +366,86 @@ class Header extends Component {
                     </LogoWrapper>
                 </HeaderItem>
 
-                <HeaderRightSide>
-                    <CurrencySwitcher>
-                        <div>$</div>
-                        <SwitcherArrow onClick={() => this.setState({
+                <HeaderRightSide >
+                    <CurrencySwitcher >
+                        <CurrencySwitcherContainer onClick={() => this.setState({
                             currencyVisible : !this.state.currencyVisible
                         })}>
-                            {this.state.currencyVisible ? <ArrowUp/> : <ArrowDown/>}
-                        </SwitcherArrow>
-                            <div ref={this.setWrapperRef} onClick={() => this.setState({
+                            <div>{this.props.currencies.find(currency => currency.active === true)?.symbol}</div>
+                            <SwitcherArrow >
+                                {this.state.currencyVisible ? <ArrowUp/> : <ArrowDown/>}
+                            </SwitcherArrow>
+                        </CurrencySwitcherContainer>
+
+                        <div>
+                            <CartWrapper onClick={() => this.setState({
                                 cartVisible : !this.state.cartVisible
                             })}>
-                                <CartWrapper>
-                                    <BasketWrapper >
-                                        <Basket/>
-                                    </BasketWrapper>
-                                    <CartQty>
-                                        <CartQtyText>{this.props?.cart?.length}</CartQtyText>
-                                    </CartQty>
-                                </CartWrapper>
-                                {this.state.cartVisible &&
-                                    <CartDropdown>
-                                        <CartTitle>
-                                            My Bat, {this.props?.cart?.length} items
-                                        </CartTitle>
-                                        <br/>
-                                        <br/>
-                                        <br/>
-                                        <CartFooter>
-                                            <CartFooterContainer>
-                                                <ViewCart>
-                                                    <Link to="/cart">
-                                                        View Bag
-                                                    </Link>
-                                                </ViewCart>
-                                                <Checkout>Checkout</Checkout>
-                                            </CartFooterContainer>
-                                        </CartFooter>
-                                    </CartDropdown>
-                                }
-                            </div>
+                                <BasketWrapper >
+                                    <Basket/>
+                                </BasketWrapper>
+                                <CartQty>
+                                    <CartQtyText>{this.props?.cart?.length}</CartQtyText>
+                                </CartQty>
+                            </CartWrapper>
+                            {this.state.cartVisible &&
+                                <CartDropdown>
+                                    <CartTitle>
+                                        My Bat, {this.props?.cart?.length} items
+                                    </CartTitle>
+                                    <CartContent>
+                                        {this.props.cart.map((product,index) => (
+                                            <CartItem key={index}>
+                                                <CartInfo>
+                                                    <CartItemTitle>
+                                                        {product.name}
+                                                        <br/>
+                                                        {product.brand}
+                                                    </CartItemTitle>
+                                                    <CartItemPrice>
+                                                        {calculatePrice(product,this.props.currencies)?.symbol}
+                                                        {calculatePrice(product,this.props.currencies)?.amount}
+                                                    </CartItemPrice>
+                                                </CartInfo>
+                                                <CartActions>
+                                                    <CartIncrement  onClick={() => this.props.addToCart(product)}>+</CartIncrement>
+                                                    <CartCount>{product.quantity}</CartCount>
+                                                    <CartDecrement  onClick={() => this.props.removeFromCart(product)}>-</CartDecrement>
+                                                </CartActions>
+                                                <CartSidebar>
+                                                    <CartImg src={product?.gallery?.length > 0 && product.gallery[0]} />
+                                                </CartSidebar>
+                                            </CartItem>
+                                        ))}
+                                        <CartTotalContainer>
+                                            <CartTotalLabel>Total</CartTotalLabel>
+                                            <CartTotalValue>
+                                                {this.props.currencies.find(currency => currency.active === true)?.symbol}
+                                                {calculatePriceSum(this.props?.cart,this.props.currencies)}
+                                            </CartTotalValue>
+                                        </CartTotalContainer>
+                                    </CartContent>
+                                    <CartFooter>
+                                        <CartFooterContainer>
+                                            <ViewCart>
+                                                <Link to="/cart">
+                                                    View Bag
+                                                </Link>
+                                            </ViewCart>
+                                            <Checkout>Checkout</Checkout>
+                                        </CartFooterContainer>
+                                    </CartFooter>
+                                </CartDropdown>
+                            }
+                        </div>
                         {this.state.currencyVisible &&
                             <CurrencyDropdown>
-                                <CurrencyItem>$ USD</CurrencyItem>
-                                <CurrencyItem>€ EUR</CurrencyItem>
-                                <CurrencyItem>¥ JPY</CurrencyItem>
+                                {this.props.currencies.map((currency,index) => (
+                                    <CurrencyItem key={index} onClick={() => {
+                                        this.props.setActiveCurrency(currency)
+                                        this.setState({currencyVisible : false})
+                                    }}>{currency.symbol} {currency.label}</CurrencyItem>
+                                ))}
                             </CurrencyDropdown>
                         }
                     </CurrencySwitcher>
@@ -331,10 +458,12 @@ class Header extends Component {
 
 function mapStateToProps(state) {
     const cart = state.cart;
+    const currencies = state.currencies;
     return {
-        cart
+        cart,
+        currencies
     };
 }
 
 
-export default connect(mapStateToProps)(Header);
+export default connect(mapStateToProps,{setActiveCurrency,addToCart,removeFromCart})(Header);

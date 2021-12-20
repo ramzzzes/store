@@ -3,6 +3,8 @@ import {Component} from "react";
 import styled from "styled-components";
 import './ProductList.css'
 import {Link} from "react-router-dom";
+import {calculatePrice} from "../../helpers/price";
+import {connect} from "react-redux";
 
 const ProductListContainer = styled.div`
   margin:80px 0 103px 0;
@@ -102,7 +104,10 @@ class ProductList extends Component {
                               name,
                               prices {
                                 amount,
-                                currency
+                                 currency {
+                                  label,
+                                  symbol
+                                }
                               },
                               gallery
                             }
@@ -148,7 +153,10 @@ class ProductList extends Component {
                             <Link to={"/category/" + this.props.match.params.category + "/product/" + product.id}>
                                 <ProductImg img={product.gallery[0]}/>
                                 <ProductTitle>{product.name}</ProductTitle>
-                                <ProductPrice>${product.prices[0]['amount']}</ProductPrice>
+                                <ProductPrice>
+                                    {calculatePrice(product,this.props.currencies)?.symbol}
+                                    {calculatePrice(product,this.props.currencies)?.amount}
+                                </ProductPrice>
                             </Link>
                         </ProductItem>
                     ))}
@@ -160,4 +168,12 @@ class ProductList extends Component {
     }
 }
 
-export default ProductList
+function mapStateToProps(state) {
+    const currencies = state.currencies;
+    return {
+        currencies
+    };
+}
+
+
+export default connect(mapStateToProps, null)(ProductList)

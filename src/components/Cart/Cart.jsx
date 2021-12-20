@@ -4,6 +4,7 @@ import styled from "styled-components";
 import './Cart.css'
 import {ProductSizeBox, ProductSizeBoxContainer} from "../Product/Product";
 import {addToCart, removeFromCart} from "../../actions/cartActions";
+import {calculatePrice} from "../../helpers/price";
 
 
 const CartTitle = styled.div`
@@ -151,7 +152,8 @@ class Cart extends Component {
                                    {product?.brand}
                                </ProductBrand>
                                <ProductPrice>
-                                   ${product?.prices && product?.prices[0]['amount']}
+                                   {calculatePrice(product,this.props.currencies)?.symbol}
+                                   {calculatePrice(product,this.props.currencies)?.amount}
                                </ProductPrice>
                                <ProductSizeBoxContainer>
                                {product?.size && this.handleSizeSetter(product?.attributes).map(size => (
@@ -184,8 +186,10 @@ class Cart extends Component {
 
 function mapStateToProps(state) {
     const cart = state.cart;
+    const currencies = state.currencies;
     return {
-        cart
+        cart,
+        currencies
     };
 }
 

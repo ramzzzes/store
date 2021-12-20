@@ -3,6 +3,7 @@ import {ApolloClient, gql, InMemoryCache} from "@apollo/client";
 import styled from "styled-components";
 import {connect} from "react-redux";
 import {addToCart} from "../../actions/cartActions";
+import {calculatePrice} from "../../helpers/price";
 
 const ProductContent = styled.div`
     display: flex;
@@ -171,7 +172,10 @@ class Product extends Component {
                               description,
                               prices {
                                 amount,
-                                currency
+                                 currency {
+                                      label,
+                                      symbol
+                                    }
                               },
                               gallery,
                               brand,
@@ -208,9 +212,9 @@ class Product extends Component {
         return (
             <ProductContent>
                 <ProductThumbList>
-                    {this.state.product.gallery?.map(img => {
+                    {this.state.product.gallery?.map((img,index) => {
                         return (
-                            <ProductThumbContainer>
+                            <ProductThumbContainer key={index}>
                                 <ProductThumb src={img} onClick={() =>   this.setState({
                                     activeImg : img
                                 })} />
@@ -224,16 +228,19 @@ class Product extends Component {
                     <ProductBrand>{this.state.product.brand}</ProductBrand>
                     <ProductSizeLabel>SIZE:</ProductSizeLabel>
                     <ProductSizeBoxContainer>
-                        {this.state.sizes?.map(size => {
+                        {this.state.sizes?.map((size,index) => {
                             return (
-                                <ProductSizeBox onClick={() => this.setState({
+                                <ProductSizeBox key={index} onClick={() => this.setState({
                                     activeSize : size.value
                                 })} active={this.state.activeSize === size.value && true}>{size.displayValue}</ProductSizeBox>
                             )
                         })}
                     </ProductSizeBoxContainer>
                     <ProductPriceLabel>PRICE:</ProductPriceLabel>
-                    <ProductPrice>${this.state.product?.prices && this.state.product?.prices[0]['amount']}</ProductPrice>
+                    <ProductPrice>
+                        {calculatePrice(this.state.product,this.props.currencies)?.symbol}
+                        {calculatePrice(this.state.product,this.props.currencies)?.amount}
+                    </ProductPrice>
                     <AddToCart onClick={() => this.props.addToCart({...this.state.product,...{size : this.state.activeSize}})}>ADD TO CART</AddToCart>
                     <ProductDesc dangerouslySetInnerHTML={{__html: this.state.product?.description}} />
                 </ProductDetailsContainer>
@@ -242,6 +249,13 @@ class Product extends Component {
     }
 }
 
+function mapStateToProps(state) {
+    const currencies = state.currencies;
+    return {
+        currencies
+    };
+}
 
 
-export default connect(null, {addToCart})(Product)
+
+export default connect(mapStateToProps, {addToCart})(Product)
