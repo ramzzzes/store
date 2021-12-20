@@ -46,7 +46,14 @@ class App extends Component{
           <div className="App">
               <Header/>
               <Switch>
-                  <Route exact path="/" component={ProductList} />
+                  <Route exact path="/">
+                      <div>
+                          <br/>
+                          <br/>
+                          <br/>
+                          hello from main page
+                      </div>
+                  </Route>
                   <Route exact path="/category/:category" component={ProductList} />
                   <Route exact path="/category/:category/product/:product" component={Product} />
                   <Route exact path="/cart" component={Cart} />
